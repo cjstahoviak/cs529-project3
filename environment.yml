@@ -4,7 +4,6 @@ channels:
 dependencies:
   - python=3.11
   - pandas
-  - numba
   - numpy
   - scikit-learn
   - matplotlib
@@ -14,5 +13,4 @@ dependencies:
   - ipython
   - librosa
   - databricks-sdk
-  - mlxtend
   - ipykernel
