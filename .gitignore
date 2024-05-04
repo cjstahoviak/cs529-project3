@@ -1,4 +1,5 @@
 src/lightning_logs/
+src/checkpoints/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

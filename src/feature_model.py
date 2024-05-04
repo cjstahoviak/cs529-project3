@@ -129,7 +129,7 @@ if __name__ == "__main__":
     model = FeatureNetwork(n_features, n_classes)
     
     # Train the model
-    trainer = L.Trainer(max_epochs=50, accelerator="gpu", log_every_n_steps=5, logger=mlf_logger)
+    trainer = L.Trainer(max_epochs=50, accelerator="gpu", log_every_n_steps=5, logger=mlf_logger, default_root_dir="checkpoints/")
     trainer.fit(model, datamodule=train_loader)
 
     # Test the model
