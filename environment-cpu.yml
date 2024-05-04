@@ -19,3 +19,4 @@ dependencies:
   - torchvision
   - torchaudio
   - cpuonly
+  - lightning
