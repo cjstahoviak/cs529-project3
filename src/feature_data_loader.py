@@ -1,8 +1,12 @@
 from pathlib import Path
 from typing import List
+
 import pandas as pd
 
-def load_feature_data(data_folder_path: Path, win_sizes: List[int] = [512, 1024, 2048, 4096, 8192]):
+
+def load_feature_data(
+    data_folder_path: Path, win_sizes: List[int] = [512, 1024, 2048, 4096, 8192]
+):
     train_dict = {}
     test_dict = {}
 

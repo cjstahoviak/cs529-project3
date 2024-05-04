@@ -2,21 +2,23 @@
 Traditional Neural Network Model based on features extracted from the audio files using librosa library.
 """
 
-from datetime import datetime
 import tempfile
+from datetime import datetime
+from pathlib import Path
+
+import lightning as L
+import numpy as np
 import pandas as pd
 import torch
-from torch import nn
-from pathlib import Path
-import numpy as np
-
 import torch.utils
 import torch.utils.data as data
-from feature_data_loader import load_feature_data
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import accuracy_score
-import lightning as L
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from torch import nn
+
+from feature_data_loader import load_feature_data
+
 
 class FeatureNetwork(L.LightningModule):
     def __init__(self, input_size, num_classes):
@@ -45,14 +47,14 @@ class FeatureNetwork(L.LightningModule):
         loss = self.loss_fn(y_pred, y)
         self.log("train_loss", loss)
         return loss
-    
+
     def validation_step(self, batch, batch_idx):
         X, y = batch
         y_pred = self(X)
         loss = self.loss_fn(y_pred, y)
         self.log("val_loss", loss)
         return loss
-    
+
     def test_step(self, batch, batch_idx):
         X, y = batch
         y_pred = self(X)
@@ -65,32 +67,34 @@ class FeatureNetwork(L.LightningModule):
 
         self.log
         return y_pred.argmax(dim=1).cpu().numpy()
-    
+
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
+
 
 def create_tensor_dataset(X, y=None):
     if y is not None:
         return data.TensorDataset(
             torch.tensor(X, dtype=torch.float32),
-            torch.tensor(y.flatten(), dtype=torch.long)
+            torch.tensor(y.flatten(), dtype=torch.long),
         )
-    
+
     return data.TensorDataset(torch.tensor(X, dtype=torch.float32))
+
 
 if __name__ == "__main__":
 
     FULL_DATASET = True
 
     from pytorch_lightning.loggers import MLFlowLogger
-    mlf_logger = MLFlowLogger(
-        experiment_name="/experiment",
-        tracking_uri="databricks"
+
+    mlf_logger = MLFlowLogger(experiment_name="/experiment", tracking_uri="databricks")
+
+    mlf_logger.experiment.log_param(
+        key="FULL_DATASET", value=FULL_DATASET, run_id=mlf_logger.run_id
     )
 
-    mlf_logger.experiment.log_param(key = "FULL_DATASET", value = FULL_DATASET, run_id = mlf_logger.run_id)
-    
-    torch.set_float32_matmul_precision('medium')
+    torch.set_float32_matmul_precision("medium")
 
     data_folder = Path("../data/preprocessed").resolve()
     X, y, X_kaggle = load_feature_data(data_folder)
@@ -130,19 +134,27 @@ if __name__ == "__main__":
     n_features = X_train.shape[1]
 
     train_loader = L.LightningDataModule.from_datasets(
-        train_dataset=create_tensor_dataset(X_train, y_train), 
-        test_dataset=create_tensor_dataset(X_test, y_test) if not FULL_DATASET else None,
+        train_dataset=create_tensor_dataset(X_train, y_train),
+        test_dataset=(
+            create_tensor_dataset(X_test, y_test) if not FULL_DATASET else None
+        ),
         val_dataset=create_tensor_dataset(X_val, y_val) if not FULL_DATASET else None,
         predict_dataset=create_tensor_dataset(X_kaggle_scaled),
         batch_size=64,
-        num_workers=4
+        num_workers=4,
     )
 
     # Initialize the model
     model = FeatureNetwork(n_features, n_classes)
-    
+
     # Train the model
-    trainer = L.Trainer(max_epochs=50, accelerator="gpu", log_every_n_steps=5, logger=mlf_logger, default_root_dir="checkpoints/")
+    trainer = L.Trainer(
+        max_epochs=50,
+        accelerator="gpu",
+        log_every_n_steps=5,
+        logger=mlf_logger,
+        default_root_dir="checkpoints/",
+    )
     trainer.fit(model, datamodule=train_loader)
 
     if not FULL_DATASET:
@@ -151,7 +163,7 @@ if __name__ == "__main__":
 
     # Predict on Kaggle test data
     y_pred = trainer.predict(model, datamodule=train_loader)
-    
+
     y_pred = np.concatenate(y_pred)
     y_pred = oe.inverse_transform(y_pred.reshape(-1, 1))
 
@@ -161,10 +173,8 @@ if __name__ == "__main__":
 
     # Save kaggle test results
     with tempfile.TemporaryDirectory() as tmpdir:
-        kaggle_submission_fname = (
-            Path(tmpdir) / f"kaggle_submission_{timestamp}.csv"
-        )
+        kaggle_submission_fname = Path(tmpdir) / f"kaggle_submission_{timestamp}.csv"
         test_results.to_csv(kaggle_submission_fname)
-        mlf_logger.experiment.log_artifact(local_path = kaggle_submission_fname, run_id = mlf_logger.run_id)
-
-
+        mlf_logger.experiment.log_artifact(
+            local_path=kaggle_submission_fname, run_id=mlf_logger.run_id
+        )
