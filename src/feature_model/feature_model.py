@@ -17,7 +17,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from torch import nn
 
-from feature_data_loader import load_feature_data
+from src.feature_model.feature_data_loader import load_feature_data
 
 
 class FeatureNetwork(L.LightningModule):
