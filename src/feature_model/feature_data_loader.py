@@ -4,14 +4,14 @@ from typing import List
 import lightning as L
 import pandas as pd
 import torch
-import torch.utils.data as data
-from lightning.pytorch.utilities.types import TRAIN_DATALOADERS
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 
 class LibrosaFeaturesDataModule(L.LightningDataModule):
+    """DataModule for loading and preparing the Librosa features dataset"""
+
     def __init__(
         self,
         data_folder_path: Path,
@@ -32,14 +32,18 @@ class LibrosaFeaturesDataModule(L.LightningDataModule):
 
     @staticmethod
     def _create_tensor_dataset(X, y=None):
+        """Create a PyTorch TensorDataset from the input data. Uses predefined data types
+        for the tensors. Creates a labeled dataset if y is provided, otherwise creates an unlabeled dataset.
+        """
+
         # Dynamic dataset creation to handle both train and unlabeled data
         if y is not None:
-            return data.TensorDataset(
+            return TensorDataset(
                 torch.tensor(X, dtype=torch.float32),
                 torch.tensor(y.flatten(), dtype=torch.long),
             )
 
-        return data.TensorDataset(torch.tensor(X, dtype=torch.float32))
+        return TensorDataset(torch.tensor(X, dtype=torch.float32))
 
     def setup(self, stage=None):
         X, y, X_kaggle = load_feature_data(self.data_folder_path, self.win_sizes)
@@ -56,6 +60,9 @@ class LibrosaFeaturesDataModule(L.LightningDataModule):
         if self.full_train:
             X_train = self.scaler.fit_transform(X)
             y_train = y
+
+            # If using full dataset, set test and val data
+            # loaders to None since they shouldn't be defined
             self.test_dataloader = None
             self.val_dataloader = None
         else:
@@ -126,6 +133,20 @@ class LibrosaFeaturesDataModule(L.LightningDataModule):
 def load_feature_data(
     data_folder_path: Path, win_sizes: List[int] = [512, 1024, 2048, 4096, 8192]
 ):
+    """
+    Load Librosa feature extracted data from pickle files.
+
+    Args:
+        data_folder_path (Path): The path to the folder containing the pickle files.
+        win_sizes (List[int], optional): List of window sizes. Defaults to [512, 1024, 2048, 4096, 8192].
+
+    Returns:
+        Tuple[pd.DataFrame, np.ndarray, pd.DataFrame]: A tuple containing the following:
+            - X_train (pd.DataFrame): The training feature data.
+            - y_train (np.ndarray): The training target data.
+            - X_test (pd.DataFrame): The testing feature data.
+    """
+
     train_dict = {}
     test_dict = {}
 
