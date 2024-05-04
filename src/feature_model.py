@@ -43,7 +43,7 @@ class FeatureNetwork(L.LightningModule):
         X, y = batch
         y_pred = self(X)
         loss = self.loss_fn(y_pred, y)
-        self.log("train_loss", loss, on_epoch=True)
+        self.log("train_loss", loss)
         return loss
     
     def validation_step(self, batch, batch_idx):
@@ -80,46 +80,59 @@ def create_tensor_dataset(X, y=None):
 
 if __name__ == "__main__":
 
+    FULL_DATASET = True
+
     from pytorch_lightning.loggers import MLFlowLogger
     mlf_logger = MLFlowLogger(
         experiment_name="/experiment",
         tracking_uri="databricks"
     )
+
+    mlf_logger.experiment.log_param(key = "FULL_DATASET", value = FULL_DATASET, run_id = mlf_logger.run_id)
     
     torch.set_float32_matmul_precision('medium')
 
     data_folder = Path("../data/preprocessed").resolve()
     X, y, X_kaggle = load_feature_data(data_folder)
 
-    # Split the data
-    cv = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-    tv_idx, test_idx = next(cv.split(X, y))
-    X_tv, y_tv = X.iloc[tv_idx], y[tv_idx]
-    X_test, y_test = X.iloc[test_idx], y[test_idx]
-
-    train_idx, val_idx = next(cv.split(X_tv, y_tv))
-    X_train, y_train = X_tv.iloc[train_idx], y_tv[train_idx]
-    X_val, y_val = X_tv.iloc[val_idx], y_tv[val_idx]
-
-    # Normalize the data
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
-    X_val = scaler.transform(X_val)
+    oe = OrdinalEncoder()
+
+    # Data preparation
+    if FULL_DATASET:
+        X_train = scaler.fit_transform(X)
+        y_train = oe.fit_transform(y.reshape(-1, 1))
+    else:
+        # Split the data
+        cv = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+
+        # Split the test set
+        tv_idx, test_idx = next(cv.split(X, y))
+        X_tv, y_tv = X.iloc[tv_idx], y[tv_idx]
+        X_test, y_test = X.iloc[test_idx], y[test_idx]
+
+        # Split into train and validation sets
+        train_idx, val_idx = next(cv.split(X_tv, y_tv))
+        X_train, y_train = X_tv.iloc[train_idx], y_tv[train_idx]
+        X_val, y_val = X_tv.iloc[val_idx], y_tv[val_idx]
+
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        X_val = scaler.transform(X_val)
+
+        y_train = oe.fit_transform(y_train.reshape(-1, 1))
+        y_test = oe.transform(y_test.reshape(-1, 1))
+        y_val = oe.transform(y_val.reshape(-1, 1))
+
     X_kaggle_scaled = scaler.transform(X_kaggle)
 
-    # Encode the target variable
-    oe = OrdinalEncoder()
-    y_train = oe.fit_transform(y_train.reshape(-1, 1))
-    y_test = oe.transform(y_test.reshape(-1, 1))
-    y_val = oe.transform(y_val.reshape(-1, 1))
     n_classes = oe.categories_[0].shape[0]
     n_features = X_train.shape[1]
 
     train_loader = L.LightningDataModule.from_datasets(
         train_dataset=create_tensor_dataset(X_train, y_train), 
-        test_dataset=create_tensor_dataset(X_test, y_test),
-        val_dataset=create_tensor_dataset(X_val, y_val),
+        test_dataset=create_tensor_dataset(X_test, y_test) if not FULL_DATASET else None,
+        val_dataset=create_tensor_dataset(X_val, y_val) if not FULL_DATASET else None,
         predict_dataset=create_tensor_dataset(X_kaggle_scaled),
         batch_size=64,
         num_workers=4
@@ -132,8 +145,9 @@ if __name__ == "__main__":
     trainer = L.Trainer(max_epochs=50, accelerator="gpu", log_every_n_steps=5, logger=mlf_logger, default_root_dir="checkpoints/")
     trainer.fit(model, datamodule=train_loader)
 
-    # Test the model
-    trainer.test(model, datamodule=train_loader)
+    if not FULL_DATASET:
+        # Test the model
+        trainer.test(model, datamodule=train_loader)
 
     # Predict on Kaggle test data
     y_pred = trainer.predict(model, datamodule=train_loader)
