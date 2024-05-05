@@ -1,5 +1,5 @@
 src/lightning_logs/
-src/checkpoints/
+checkpoints/
 
 data/processed/spectrograms/
 
