@@ -1,3 +1,6 @@
+src/lightning_logs/
+src/checkpoints/
+
 data/processed/spectrograms/
 
 # Byte-compiled / optimized / DLL files

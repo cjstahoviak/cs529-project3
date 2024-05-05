@@ -1,0 +1,22 @@
+name: cs529_proj3
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - mlflow
+  - pre-commit
+  - ipython
+  - librosa
+  - databricks-sdk
+  - ipykernel
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cpuonly
+  - lightning
