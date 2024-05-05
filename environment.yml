@@ -1,6 +1,7 @@
 name: cs529_proj3
 channels:
   - conda-forge
+  - pytorch
 dependencies:
   - python=3.11
   - pandas
@@ -16,3 +17,5 @@ dependencies:
   - ipykernel
   - torchvision
   - torch
+  - libpng
+  - libjpeg
