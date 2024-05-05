@@ -13,10 +13,14 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 parallel_config(n_jobs=-2)
+WINDOW_SIZE = 1024  # Number of samples in each frame
+HOP_LENGTH = int(WINDOW_SIZE / 2)  # Number of samples between successive frames
 
 # File Paths
 train_fpath = Path("data/processed/train_data.pkl").resolve()
-output_dir = Path("data/processed/spectrograms/amplitude/train").resolve()
+output_dir = Path(
+    "data/processed/spectrograms/amplitude_" + str(WINDOW_SIZE) + "/train"
+).resolve()
 
 # Load data
 train_df = pd.read_pickle(train_fpath)
@@ -33,10 +37,8 @@ X_train["audio"] = X_train["audio"].apply(lambda x: x[:min_audio_length])
 genre_count = {}  # Dictionary to keep track of the count for each genre
 image_sizes = []
 
-# TODO: Is sampling rate stored in the pickle file?
 sampling_rate = 22050  # Standard sampling rate for audio data
-n_fft = 2048  # Number of samples to use for each FFT
-hop_length = 512  # Number of samples between successive frames
+n_fft = WINDOW_SIZE  # Number of samples to use for each FFT
 
 for idx, audio_clip in enumerate(X_train["audio"]):
     genre_label = y_train.iloc[idx]
@@ -50,7 +52,9 @@ for idx, audio_clip in enumerate(X_train["audio"]):
     output_genre_dir.mkdir(parents=True, exist_ok=True)
 
     # Compute the Short-Time Fourier Transform (STFT) of the audio
-    stft_matrix = librosa.stft(audio_clip, n_fft=n_fft, hop_length=hop_length)
+    stft_matrix = librosa.stft(
+        audio_clip, n_fft=n_fft, win_length=WINDOW_SIZE, hop_length=HOP_LENGTH
+    )
 
     # Convert the magnitude of the STFT matrix to decibel (dB) scale
     spectrogram_db = librosa.amplitude_to_db(abs(stft_matrix), ref=np.max)
@@ -66,7 +70,7 @@ for idx, audio_clip in enumerate(X_train["audio"]):
     )
     img_normalized = img_normalized.astype(np.uint8)  # Convert to unsigned byte format
 
-    # Generate filename in the format <genre>_<6-digit number>_spectrogram.png
+    # Generate filename
     filename = f"{genre_label}_{genre_count[genre_label]:06}_spectrogram.png"
     spectrogram_path = output_genre_dir / filename
 
