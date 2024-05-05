@@ -1,4 +1,4 @@
-name: cs529_proj3
+name: cs529_proj3_cuda
 channels:
   - nvidia
   - pytorch
