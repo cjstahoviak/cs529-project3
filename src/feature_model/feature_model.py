@@ -12,6 +12,7 @@ import pandas as pd
 import torch
 import torch.utils
 from feature_data_loader import LibrosaFeaturesDataModule
+from lightning.pytorch.callbacks import EarlyStopping
 from pytorch_lightning.loggers import MLFlowLogger
 from sklearn.metrics import accuracy_score
 from torch import nn
@@ -72,7 +73,7 @@ class FeatureNetwork(L.LightningModule):
 if __name__ == "__main__":
 
     # Constants
-    FULL_DATASET = True
+    FULL_DATASET = False
     DATA_FPATH = "../../data/preprocessed"
 
     # Setup MLFlow logger
@@ -107,6 +108,7 @@ if __name__ == "__main__":
         log_every_n_steps=5,
         logger=mlf_logger,
         default_root_dir="checkpoints/",
+        callbacks=[EarlyStopping(monitor="val_loss")],
     )
 
     # Train and test the model
