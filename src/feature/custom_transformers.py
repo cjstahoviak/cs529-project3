@@ -67,7 +67,7 @@ class LibrosaTransformer(BaseEstimator, TransformerMixin):
     """Constructs a transformer which applies a librosa function to each element of the input."""
 
     def __init__(self, feature: str = "chroma_stft", **kwargs):
-        self.feature = feature
+        self.feature = feature  # TODO: Consider passing function instead of string
         self.kwargs = kwargs
 
     def fit(self, X, y=None):
@@ -97,6 +97,7 @@ class LibrosaTransformer(BaseEstimator, TransformerMixin):
         except AttributeError:
             raise ValueError(
                 f"The feature '{feature}' was not found in librosa.feature."
+                # TODO: Try search in librosa module
             )
 
     def get_params(self, deep=True):
