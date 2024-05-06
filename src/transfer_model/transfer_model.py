@@ -1,3 +1,9 @@
+"""Transfer learning model for audio classification using the VGGish model as a backbone.
+Contains the VGGishTransferModel class which is a PyTorch Lightning module that uses the VGGish model as a backbone.
+The model is trained on the given audio data and the predictions are saved to a Kaggle submission file when
+run as a script.
+"""
+
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -16,7 +22,12 @@ from torchaudio.prototype.pipelines import VGGISH
 
 
 class VGGishTransferModel(L.LightningModule):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes: int):
+        """Transfer learning model for audio classification using the VGGish model as a backbone.
+
+        Args:
+            num_classes (int): Number of target classes, used to determine the size of the output layer.
+        """
         super().__init__()
 
         backbone = VGGISH.get_model()
@@ -59,6 +70,19 @@ class VGGishTransferModel(L.LightningModule):
         return logits
 
     def calc_y_pred(self, logits: torch.Tensor, num_examples: List[int]):
+        """
+        Calculate the predicted labels for each original sample by taking the majority vote of the predictions for each.
+        Each original sample may have multiple predictions due to multiple frames per audio file. The majority vote is
+        taken as the predicted label for the original sample. e.g. if 3 frames are predicted as class 1 and 2 frames are
+        predicted as class 2, the predicted label for the original sample is class 1.
+
+        Args:
+            logits (torch.Tensor): sum(num_examples) x num_classes tensor containing the predicted logits for each frame.
+            num_examples (List[int]): A list containing the number of examples for each original sample.
+
+        Returns:
+            torch.Tensor: The predicted labels for each original sample.
+        """
         # Group the predictions for each original sample
         y_pred_grouped = torch.split(logits, num_examples)
 
@@ -67,6 +91,8 @@ class VGGishTransferModel(L.LightningModule):
 
         # Take the majority vote for each original sample
         y_pred = [torch.mode(preds)[0] for preds in y_pred]
+
+        # Convert the list of tensors to a single tensor
         y_pred = torch.tensor(y_pred, dtype=torch.float, device=logits.device)
         return y_pred
 
@@ -102,6 +128,16 @@ class VGGishTransferModel(L.LightningModule):
 
 
 def vgg_preprocessing(waveform):
+    """
+    Preprocesses the given waveform for input to VGGISH model.
+
+    Args:
+        waveform (torch.Tensor): The input waveform to be preprocessed.
+
+    Returns:
+        torch.Tensor: The preprocessed waveform.
+
+    """
     input_proc = VGGISH.get_input_processor()
     input_sr = VGGISH.sample_rate
     waveform = torchaudio.functional.resample(waveform, 22050, input_sr)
