@@ -53,6 +53,10 @@ class MultiSampleDatasetFolder(DatasetFolder):
 
 
 def collate_fn(batch):
+    """Collate function for combining multiple examples per sasample into a single tensor batch.
+    e.g. multiple frames generated per audio sample.
+    """
+
     # Unzip the batch
     examples, targets, num_examples = zip(*batch)
 
@@ -116,9 +120,10 @@ class AudioDataModule(L.LightningDataModule):
 
         # Split train set into train and validation
         targets = self.full_dataset.targets
+        n_samples = len(self.full_dataset)
 
         train_idx, val_idx = train_test_split(
-            range(len(self.full_dataset)),
+            range(n_samples),
             stratify=targets,
             test_size=self.validation_size,
             shuffle=True,
