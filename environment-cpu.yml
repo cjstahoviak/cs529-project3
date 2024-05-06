@@ -15,7 +15,7 @@ dependencies:
   - librosa
   - databricks-sdk
   - ipykernel
-  - pytorch=2.4.0.dev20240505
+  - pytorch=2.4.0.*
   - torchvision
   - torchaudio
   - cpuonly
