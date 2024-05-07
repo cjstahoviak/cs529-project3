@@ -112,7 +112,7 @@ def run_cv(hparams):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Fabric MNIST K-Fold Cross Validation Example"
+        description="Feature Model Cross Validation Script"
     )
     parser.add_argument(
         "--batch-size",
