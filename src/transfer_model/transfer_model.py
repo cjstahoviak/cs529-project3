@@ -4,6 +4,7 @@ The model is trained on the given audio data and the predictions are saved to a 
 run as a script.
 """
 
+import argparse
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +24,7 @@ from torchaudio.prototype.pipelines import VGGISH
 
 
 class VGGishTransferModel(L.LightningModule):
-    def __init__(self, num_classes: int):
+    def __init__(self, num_classes: int, lr: float = 1e-3):
         """Transfer learning model for audio classification using the VGGish model as a backbone.
 
         Args:
@@ -60,6 +61,7 @@ class VGGishTransferModel(L.LightningModule):
         )
 
         self.loss_fn = nn.CrossEntropyLoss()
+        self.lr = lr
 
     def forward(self, x):
         # Get the embeddings from the VGGish model
@@ -125,7 +127,7 @@ class VGGishTransferModel(L.LightningModule):
         return y_pred.cpu().numpy()
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-3)
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
 
 
 def vgg_preprocessing(waveform):
@@ -148,6 +150,25 @@ def vgg_preprocessing(waveform):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Transfer Model Run Script")
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=16,
+        metavar="N",
+        help="input batch size for training (default: 16)",
+    )
+
+    parser.add_argument(
+        "--lr",
+        type=float,
+        default=0.0001,
+        metavar="LR",
+        help="learning rate (default: 0.0001)",
+    )
+
+    hparams = parser.parse_args()
+
     # Constants
     DATA_FPATH = Path(__file__).parents[2].joinpath("data/raw")
 
@@ -165,11 +186,14 @@ if __name__ == "__main__":
     input_proc = VGGISH.get_input_processor()
 
     train_loader = AudioDataModule(
-        data_folder, batch_size=16, num_workers=4, transform=vgg_preprocessing
+        data_folder,
+        batch_size=hparams.batch_size,
+        num_workers=4,
+        transform=vgg_preprocessing,
     )
 
     # Initialize the model
-    model = VGGishTransferModel(10)
+    model = VGGishTransferModel(10, hparams.lr)
 
     print(model)
 
