@@ -1,7 +1,7 @@
 name: cs529_proj3_cuda
 channels:
   - nvidia
-  - pytorch
+  - pytorch-nightly
   - conda-forge
 dependencies:
   - python=3.11
@@ -16,7 +16,7 @@ dependencies:
   - librosa
   - databricks-sdk
   - ipykernel
-  - pytorch
+  - pytorch=2.4.0.*
   - torchvision
   - torchaudio
   - pytorch-cuda=11.8

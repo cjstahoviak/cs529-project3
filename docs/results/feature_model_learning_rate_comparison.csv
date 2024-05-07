@@ -1,0 +1,25 @@
+Start Time,Duration,Run ID,Name,Source Type,Source Name,User,Status,batch_size,dry_run,epochs,folds,log_interval,lr,seed,epoch,final_val_accuracy,mean_validation_accuracy,train_loss,val_loss
+5/6/2024 21:03,30.4s,63c4e6f45b614693b240198d5400da6a,fold_4,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.1,1,9,0.105555556,,2.273288012,2.290658474
+5/6/2024 21:03,30.5s,1ba73d52f10d405288ea08df25c9fca6,fold_3,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.1,1,9,0.116666667,,2.301260471,2.263663054
+5/6/2024 21:02,31.1s,dc8482feede447f28dcb2a4d403929af,fold_2,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.1,1,9,0.1,,2.268638849,3.914163589
+5/6/2024 21:02,30.7s,2a8b84c8787c4141926a24bb550865e4,fold_1,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.1,1,9,0.105555556,,2.143978357,4.089959621
+5/6/2024 21:01,31.0s,3461022b65a74ebd85d6d417474a44a9,fold_0,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.1,1,9,0.1,,2.291108608,2.303066015
+5/6/2024 21:01,2.6min,f55f74ad5e764a1b8b6d17e016b9afbd,2024-05-06-21-01-49,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.1,1,,,0.105555556,,
+5/6/2024 20:55,31.0s,baa61d1c7ce04bffae23968b5e4fb7ec,fold_4,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.0001,1,9,0.816666667,,0.085844971,0.546149671
+5/6/2024 20:54,31.0s,d94446e09c34475ca8883ee5df013eaa,fold_3,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.0001,1,9,0.794444444,,0.060480487,0.631068885
+5/6/2024 20:54,30.7s,5e10c9e6a65d47879c0289fe4ea5c4c7,fold_2,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.0001,1,9,0.75,,0.110049874,0.733563244
+5/6/2024 20:53,30.7s,d562789120db4f6d8c990a07d328bed6,fold_1,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.0001,1,9,0.783333333,,0.097064249,0.728955567
+5/6/2024 20:53,31.0s,6d6ffa170488421a8accbfe25ccf4908,fold_0,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.0001,1,9,0.805555556,,0.059299629,0.638632894
+5/6/2024 20:53,2.6min,db11e80ebfe141e88971ba577b1951dd,2024-05-06-20-53-00,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.0001,1,,,0.79,,
+5/6/2024 20:51,30.9s,80cc3ca6a95d4524be413f45f4d8b509,fold_4,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.001,1,9,0.85,,0.00226508,0.713354826
+5/6/2024 20:51,30.9s,83ce5bc58f1b479e8be6efe85300d377,fold_3,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.001,1,9,0.794444444,,0.000440106,0.952643156
+5/6/2024 20:50,30.4s,bf7412e5f64046d48f8f99ad340ba646,fold_2,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.001,1,9,0.761111111,,0.012294319,1.519695759
+5/6/2024 20:50,29.5s,3c9b850d8a49470688b8cfb049b69519,fold_1,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.001,1,9,0.783333333,,6.55872E-05,1.238370061
+5/6/2024 20:49,30.8s,c3efdccfd4184b67ba306cd67d0b1009,fold_0,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.001,1,9,0.788888889,,0.00152002,1.040008187
+5/6/2024 20:49,2.6min,8f8c9b34dedd4aecb186b3c084cd1bbe,2024-05-06-20-49-28,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.001,1,,,0.795555556,,
+5/6/2024 20:48,30.6s,1ca0d67503bc4b2fbd5ae2937850193b,fold_4,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.01,1,9,0.461111111,,1.624228239,1.7983253
+5/6/2024 20:48,30.1s,a427c93a7c814816b5cf64a01822cc10,fold_3,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.01,1,9,0.544444444,,1.209437847,1.620283365
+5/6/2024 20:47,30.4s,d05513db67424b6c8d54b0dfeffbaf44,fold_2,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.01,1,9,0.561111111,,1.187249303,1.512709022
+5/6/2024 20:47,30.3s,0bd563687f384a558f4ef03f22fcc870,fold_1,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.01,1,9,0.6,,0.982216716,1.404968739
+5/6/2024 20:46,31.4s,07176c2595a549108b05bf0514ed3499,fold_0,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.01,1,9,0.711111111,,0.604994774,1.296919942
+5/6/2024 20:46,2.6min,31dfec145d9f403385195d4aea96d809,2024-05-06-20-46-36,LOCAL,src\feature_model\feature_model_cv.py,nlivingsto@unm.edu,FINISHED,64,FALSE,10,5,10,0.01,1,,,0.575555556,,
