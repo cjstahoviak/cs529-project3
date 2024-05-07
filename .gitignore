@@ -1,3 +1,4 @@
+mlruns/
 src/lightning_logs/
 checkpoints/
 
