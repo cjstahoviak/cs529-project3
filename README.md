@@ -79,15 +79,24 @@ C:.
 │       utils.py: (NICK) Utility functions for other files
 │       __init__.py: (NICK) Python template file
 │
-└───trained_model/: Trained models from train_cnn_testing.py
+└───trained_cnn_models/: Trained models from train_cnn_testing.py
 ```
 
 ## Contributions
 Nick Livingstone:
-- Setup
+- Setup repo
+- Extracted CSV features
+- Built MLP
+- Built transfer learning model
+- Wrote paper
+- Wrote README
 
 Calvin Stahoviak:
-- Setup 
+- Setup repo
+- Extracted spectrograms
+- Built CNN
+- Wrote paper
+- Wrote README
 
 ## Kaggle
 Kaggle Score: 0.89 (1st)
