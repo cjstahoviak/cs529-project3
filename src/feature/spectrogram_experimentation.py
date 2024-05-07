@@ -37,25 +37,16 @@ spectrogram_db = librosa.amplitude_to_db(abs(stft_matrix), ref=np.max)
 power_spectrogram = librosa.power_to_db(
     np.abs(stft_matrix) ** 2, ref=np.max
 )  # np.abs(stft_matrix)**2
-phase_spectrogram = np.angle(
-    librosa.stft(y=y, n_fft=n_fft, win_length=WINDOW_SIZE, hop_length=HOP_LENGTH)
-)
+phase_spectrogram = np.angle(stft_matrix)
 cqt_spectrogram = np.abs(librosa.cqt(y=y, sr=sr))
-chroma = librosa.feature.chroma_stft(
+chroma_stft = librosa.feature.chroma_stft(
     y=y, sr=sr, n_chroma=12, n_fft=n_fft, win_length=WINDOW_SIZE, hop_length=HOP_LENGTH
 )
+chroma_cqt = librosa.feature.chroma_cqt(y=y, sr=sr, n_chroma=12, hop_length=HOP_LENGTH)
 tempogram = librosa.feature.tempogram(
     y=y, sr=sr, win_length=WINDOW_SIZE, hop_length=HOP_LENGTH
 )
 tonnetz = librosa.feature.tonnetz(y=y, sr=sr)
-
-# Displaying the MFCCs:
-# plt.figure(figsize=(10, 4))
-# librosa.display.specshow(melspectrogram, x_axis='time', sr=sr)
-# plt.colorbar()
-# plt.title('MFCC')
-# plt.tight_layout()
-# plt.show()
 
 # List of features and their titles
 features = [
@@ -65,13 +56,14 @@ features = [
     (power_spectrogram, "Power Spectrogram", "log"),
     (phase_spectrogram, "Phase Spectrogram", "linear"),
     (cqt_spectrogram, "CQT Spectrogram", "cqt_hz"),
-    (chroma, "Chroma Features", "chroma"),
+    (chroma_stft, "Chroma STFT Features", "chroma"),
+    (chroma_cqt, "Chroma CQT Features", "chroma"),
     (tempogram, "Tempogram", "tempo"),
     (tonnetz, "Tonnetz", None),
 ]
 
 # Plotting setup
-fig, axes = plt.subplots(3, 3, figsize=(18, 12))
+fig, axes = plt.subplots(5, 2, figsize=(10, 18))
 axes = axes.flatten()
 
 # Loop to plot each feature with the appropriate axis labels
@@ -86,6 +78,10 @@ for ax, (feature, title, axis) in zip(axes, features):
         )
     ax.set_title(title, fontsize=10)
     fig.colorbar(img, ax=ax, format="%+2.0f dB")
+
+# Hide the unused axes
+for ax in axes[len(features) :]:
+    ax.set_visible(False)
 
 plt.tight_layout(pad=3.0)
 plt.savefig("./figures/spectrogram_features_sample.png")  # Save the plot as an image
