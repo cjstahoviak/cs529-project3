@@ -15,6 +15,7 @@ import pandas as pd
 import torch
 import torchaudio
 from audio_data_module import AudioDataModule
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import MLFlowLogger
 from sklearn.metrics import accuracy_score
 from torch import nn
@@ -179,6 +180,7 @@ if __name__ == "__main__":
         log_every_n_steps=5,
         logger=mlf_logger,
         default_root_dir="checkpoints/",
+        callbacks=[EarlyStopping(monitor="val_loss")],
     )
 
     # Train the model
