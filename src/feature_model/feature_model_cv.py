@@ -83,11 +83,14 @@ def run_cv(hparams):
                     num_sanity_val_steps=0,
                 )
 
+                t_start = datetime.now()
                 trainer.fit(
                     model,
                     train_dataloaders=make_dataloader(train_set, hparams.batch_size),
                     val_dataloaders=make_dataloader(val_set, hparams.batch_size),
                 )
+                t_end = datetime.now()
+                mlflow.log_metric("training_time", (t_end - t_start).total_seconds())
 
                 # Predict and log final validation results
                 valid_y_pred = trainer.predict(
