@@ -148,7 +148,7 @@ def vgg_preprocessing(waveform):
 
 if __name__ == "__main__":
     # Constants
-    DATA_FPATH = "../../data/raw"
+    DATA_FPATH = Path(__file__).parents[2].joinpath("data/raw")
 
     # Setup MLFlow logger
     mlf_logger = MLFlowLogger(
