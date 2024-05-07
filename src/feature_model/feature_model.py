@@ -19,7 +19,7 @@ from torch import nn
 
 
 class FeatureNetwork(L.LightningModule):
-    def __init__(self, input_size, num_classes):
+    def __init__(self, input_size, num_classes, lr=1e-3):
         super().__init__()
 
         hidden_size = (input_size + num_classes) // 2
@@ -27,14 +27,15 @@ class FeatureNetwork(L.LightningModule):
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.2),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.5),
             nn.Linear(hidden_size, num_classes),
         )
 
         self.loss_fn = nn.CrossEntropyLoss()
+        self.lr = lr
 
     def forward(self, x):
         return self.linear_relu_stack(x)
@@ -67,7 +68,7 @@ class FeatureNetwork(L.LightningModule):
         return y_pred.argmax(dim=1).cpu().numpy()
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=1e-3)
+        return torch.optim.Adam(self.parameters(), lr=self.lr)
 
 
 if __name__ == "__main__":
