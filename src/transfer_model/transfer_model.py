@@ -151,9 +151,7 @@ if __name__ == "__main__":
     DATA_FPATH = Path(__file__).parents[2].joinpath("data/raw")
 
     # Setup MLFlow logger
-    mlf_logger = MLFlowLogger(
-        experiment_name="/experiment", tracking_uri="databricks", log_model=True
-    )
+    mlf_logger = MLFlowLogger(experiment_name="/experiment", tracking_uri="databricks")
 
     # Set the default precision for matmul operations
     torch.set_float32_matmul_precision("medium")
