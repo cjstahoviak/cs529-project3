@@ -11,14 +11,16 @@ from pathlib import Path
 from typing import List
 
 import lightning as L
+import mlflow
 import numpy as np
 import pandas as pd
 import torch
 import torchaudio
 from audio_data_module import AudioDataModule
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
+from matplotlib import pyplot as plt
 from pytorch_lightning.loggers import MLFlowLogger
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, confusion_matrix
 from torch import nn
 from torchaudio.prototype.pipelines import VGGISH
 
@@ -53,10 +55,10 @@ class VGGishTransferModel(L.LightningModule):
             nn.Flatten(),
             nn.Linear(num_features, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.6),
+            nn.Dropout(0.4),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Dropout(0.6),
+            nn.Dropout(0.4),
             nn.Linear(hidden_size, num_classes),
         )
 
@@ -149,6 +151,15 @@ def vgg_preprocessing(waveform):
     return waveform
 
 
+def y_pred_to_labels(y_pred, dataset):
+    """
+    Convert the predicted labels to class labels using the given dataset.
+    """
+    idx_to_class = {v: k for k, v in dataset.class_to_idx.items()}
+    y_pred_labeled = np.array([idx_to_class[i] for i in y_pred])
+    return y_pred_labeled
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Transfer Model Run Script")
     parser.add_argument(
@@ -190,6 +201,7 @@ if __name__ == "__main__":
         batch_size=hparams.batch_size,
         num_workers=4,
         transform=vgg_preprocessing,
+        validation_size=0.05,
     )
 
     # Initialize the model
@@ -208,8 +220,41 @@ if __name__ == "__main__":
         num_sanity_val_steps=0,
     )
 
+    mlflow.log_params(hparams.__dict__)
+
     # Train the model
     trainer.fit(model, datamodule=train_loader)
+
+    # make prediction on validation set
+    y_pred = trainer.predict(model, dataloaders=train_loader.val_dataloader())
+    y_pred = np.concatenate(y_pred)
+
+    y_pred_labeled = y_pred_to_labels(y_pred, train_loader.full_dataset)
+
+    # Get the original validation targets
+    y_val = np.array(
+        [
+            train_loader.full_dataset.targets[i]
+            for i in train_loader.val_dataloader().dataset.indices
+        ]
+    )
+    y_val = y_pred_to_labels(y_val, train_loader.full_dataset)
+
+    # Calculate validation accuracy and confusion matrix
+    validation_accuracy = accuracy_score(y_val, y_pred_labeled)
+    cm = confusion_matrix(y_val, y_pred_labeled, normalize="true")
+    cmd = ConfusionMatrixDisplay(cm, display_labels=train_loader.full_dataset.classes)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    cmd.plot(ax=ax)
+    plt.tight_layout()
+    mlf_logger.experiment.log_metric(
+        key="final_val_accuracy", value=validation_accuracy, run_id=mlf_logger.run_id
+    )
+    mlf_logger.experiment.log_figure(
+        figure=cmd.figure_,
+        artifact_file=f"confusion_matrix.png",
+        run_id=mlf_logger.run_id,
+    )
 
     # Predict on Kaggle test data
     y_pred = trainer.predict(model, datamodule=train_loader)
