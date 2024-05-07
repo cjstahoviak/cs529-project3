@@ -19,6 +19,7 @@ from src.model.convolutional_neural_net import ConvolutionalNeuralNet, evaluate,
 from src.model.device import DeviceDataLoader, get_default_device, to_device
 
 
+# Gets the mean and standard deviation of the dataset
 def get_mean_std(loader):
     channels_sum, channels_squared_sum, num_batches = 0, 0, 0
 
@@ -36,30 +37,31 @@ def get_mean_std(loader):
 def main():
 
     # Data parameters
-    random_seed = 31
+    random_seed = 42
     batch_size = 128
     num_workers = 0
     resize_dim = (256, 256)
+    spectrogram_type = "spectrogram_db_1024"
 
     # Fit parameters
     opt_func = optim.Adam  # try other optimizers
     lr = 0.001
-    num_epochs = 20
-    lr_decay_factor = 0.1
-    lr_decay_step_size = 10
+    num_epochs = 50
+    lr_decay_factor = 0.0000
+    lr_decay_step_size = 100
     patience = 5
     min_delta = 0.001
 
     # CNN parameters
     input_channels = 1
-    kernel_size = 3
+    kernel_size = 4
     stride = 1
     padding = 1
     final_dim = (4, 4)
 
     # Set random seed for reproducibility
     torch.manual_seed(random_seed)
-    train_dir = Path("data/processed/spectrograms/train/spectrogram_db_1024").resolve()
+    train_dir = Path("data/processed/spectrograms/train/" + spectrogram_type).resolve()
 
     # Define a transform without normalization
     pre_transform = transforms.Compose(
@@ -233,11 +235,12 @@ def main():
     # Adjust layout and save the figure
     plt.tight_layout()
     figure_name = (
-        "cnn_model"
-        + "_batch-"
+        "_batch-"
         + str(batch_size)
         + "_resize-"
         + str(resize_dim[0])
+        + "_spectrogram-"
+        + spectrogram_type
         + "_optfunc-"
         + opt_func.__name__
         + "_lr-"
@@ -259,7 +262,42 @@ def main():
         + "_finaldim-"
         + str(final_dim[0])
     )
-    plt.savefig("./figures/search/" + figure_name + ".png")
+    plt.savefig("./figures/search/" + "lossAndAccuracy_" + figure_name + ".png")
+
+    # Make confusion matrix
+    import seaborn as sns
+    from sklearn.metrics import confusion_matrix
+
+    # Get predictions
+    cnn_model.eval()
+    all_preds = []
+    all_labels = []
+    for images, labels in val_dataloader:
+        preds = cnn_model(images)
+        all_preds.append(preds)
+        all_labels.append(labels)
+
+    # Stack all the predictions and labels
+    all_preds = torch.cat(all_preds)
+    all_labels = torch.cat(all_labels)
+
+    # Get the predicted class
+    _, predicted = torch.max(all_preds, 1)
+
+    # Get the confusion matrix
+    cm = confusion_matrix(all_labels.cpu(), predicted.cpu())
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        xticklabels=dataset.classes,
+        yticklabels=dataset.classes,
+    )
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.savefig("./figures/search/" + "confusionMatrix_" + figure_name + ".png")
 
 
 if __name__ == "__main__":
