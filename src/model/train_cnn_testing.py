@@ -35,24 +35,44 @@ def get_mean_std(loader):
 
 def main():
 
-    # Prepare parameters for data loading
-    random_seed = 42
-    torch.manual_seed(random_seed)
-    batch_size = 32
+    # Data parameters
+    random_seed = 31
+    batch_size = 128
     num_workers = 0
+    resize_dim = (256, 256)
+
+    # Fit parameters
+    opt_func = optim.Adam  # try other optimizers
+    lr = 0.001
+    num_epochs = 20
+    lr_decay_factor = 0.1
+    lr_decay_step_size = 10
+    patience = 5
+    min_delta = 0.001
+
+    # CNN parameters
+    input_channels = 1
+    kernel_size = 3
+    stride = 1
+    padding = 1
+    final_dim = (4, 4)
+
+    # Set random seed for reproducibility
+    torch.manual_seed(random_seed)
+    train_dir = Path("data/processed/spectrograms/train/spectrogram_db_1024").resolve()
 
     # Define a transform without normalization
     pre_transform = transforms.Compose(
         [
-            transforms.Grayscale(num_output_channels=1),
-            transforms.Resize((128, 128)),  # Resize smaller edge to 128
+            transforms.Grayscale(num_output_channels=input_channels),
+            transforms.Resize(resize_dim),  # Resize smaller edge to 128
             transforms.ToTensor(),
         ]
     )
 
     # Load data and split
     pre_dataset = torchvision.datasets.ImageFolder(
-        root="./data/processed/spectrograms/amplitude_1024/train",
+        root=train_dir,
         transform=pre_transform,
     )
     val_size = pre_dataset.__len__() // 5
@@ -75,8 +95,8 @@ def main():
     # Final transform with normalization
     final_transform = transforms.Compose(
         [
-            transforms.Grayscale(num_output_channels=1),
-            transforms.Resize((128, 128)),
+            transforms.Grayscale(num_output_channels=input_channels),
+            transforms.Resize(resize_dim),
             transforms.ToTensor(),
             transforms.Normalize(train_mean, train_std),
         ]
@@ -84,7 +104,7 @@ def main():
 
     # Load normalized data and split
     dataset = torchvision.datasets.ImageFolder(
-        root="./data/processed/spectrograms/amplitude_1024/train",
+        root=train_dir,
         transform=final_transform,
     )
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
@@ -102,7 +122,15 @@ def main():
     )
 
     # Define cnn
-    cnn_model = ConvolutionalNeuralNet()
+    cnn_model = ConvolutionalNeuralNet(
+        input_channels=input_channels,
+        input_size=resize_dim,
+        num_classes=len(dataset.classes),
+        kernel_size=kernel_size,
+        stride=stride,
+        padding=padding,
+        final_dim=final_dim,
+    )
     # print(cnn)
 
     # Test the model with a batch of data
@@ -121,16 +149,27 @@ def main():
     print(device)
 
     # Instantiate the model on the GPU
-    cnn_model = to_device(ConvolutionalNeuralNet(), device)
+    cnn_model = to_device(
+        ConvolutionalNeuralNet(input_channels=input_channels, input_size=resize_dim),
+        device,
+    )
 
     # Evaluate the model on the validation set without training
     print(evaluate(cnn_model, val_dataloader))
 
     # Train the model
-    num_epochs = 10
-    opt_func = optim.Adam
-    lr = 0.001
-    history = fit(num_epochs, lr, cnn_model, train_dataloader, val_dataloader, opt_func)
+    history = fit(
+        num_epochs,
+        lr,
+        cnn_model,
+        train_dataloader,
+        val_dataloader,
+        opt_func,
+        lr_decay_factor=lr_decay_factor,
+        lr_decay_step_size=lr_decay_step_size,
+        patience=patience,
+        min_delta=min_delta,
+    )
 
     # Save the model
     model_name = (
@@ -145,25 +184,82 @@ def main():
     )
     torch.save(cnn_model.state_dict(), "./trained_model/" + model_name)
 
-    # Plot the accuracy over time
+    # Data preparation
     accuracies = [x["val_acc"] for x in history]
-    plt.plot(accuracies, "-x")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.title("Accuracy vs. No. of epochs")
-    plt.savefig("./figures/accuracy_vs_epochs.png")
-
-    # Plot the loss over time
     train_losses = [x.get("train_loss") for x in history]
     val_losses = [x["val_loss"] for x in history]
-    plt.clf()
-    plt.plot(train_losses, "-bx")
-    plt.plot(val_losses, "-rx")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.legend(["Training", "Validation"])
-    plt.title("Loss vs. No. of epochs")
-    plt.savefig("./figures/loss_vs_epochs.png")
+    lr_hist = [x.get("lr") for x in history]
+
+    # Define the parameters using the variables
+    params = {
+        "Batch Size": batch_size,
+        "Resize Dimensions": resize_dim,
+        "Optimizer Function": opt_func.__name__,  # Using the name of the optimizer function
+        "Learning Rate": lr,
+        "Number of Epochs": num_epochs,
+        "Learning Rate Decay Factor": lr_decay_factor,
+        "Learning Rate Decay Step Size": lr_decay_step_size,
+        "Input Channels": input_channels,
+        "Kernel Size": kernel_size,
+        "Stride": stride,
+        "Padding": padding,
+        "Final Dimensions": final_dim,
+    }
+
+    # Create parameter string from dictionary
+    param_text = "\n".join([f"{k}: {v}" for k, v in params.items()])
+
+    # Create a figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 8))  # Two subplots in one column
+
+    # Plot accuracy on the first subplot
+    ax1.plot(accuracies, "-x")
+    # ax1.plot(lr_hist, "-rx")
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Accuracy")
+    ax1.set_title("Accuracy vs. No. of epochs")
+
+    # Plot loss on the second subplot
+    ax2.plot(train_losses, "-bx")
+    ax2.plot(val_losses, "-rx")
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Loss")
+    ax2.legend(["Training", "Validation"])
+    ax2.set_title("Loss vs. No. of epochs")
+
+    # Add a text box with parameters to the figure
+    # fig.text(0.05, 0.05, param_text, fontsize=12, ha='left', verticalalignment='bottom')
+
+    # Adjust layout and save the figure
+    plt.tight_layout()
+    figure_name = (
+        "cnn_model"
+        + "_batch-"
+        + str(batch_size)
+        + "_resize-"
+        + str(resize_dim[0])
+        + "_optfunc-"
+        + opt_func.__name__
+        + "_lr-"
+        + str(lr)
+        + "_epochs-"
+        + str(num_epochs)
+        + "_lr_decay_factor-"
+        + str(lr_decay_factor)
+        + "_lr_decay_step_size-"
+        + str(lr_decay_step_size)
+        + "_channels-"
+        + str(input_channels)
+        + "_kernelsize-"
+        + str(kernel_size)
+        + "_stride-"
+        + str(stride)
+        + "_padding-"
+        + str(padding)
+        + "_finaldim-"
+        + str(final_dim[0])
+    )
+    plt.savefig("./figures/search/" + figure_name + ".png")
 
 
 if __name__ == "__main__":
