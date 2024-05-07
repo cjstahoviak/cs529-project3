@@ -1,12 +1,10 @@
 import argparse
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
 import lightning as L
 import mlflow
 import numpy as np
-import pandas as pd
 import torch
 import torch.utils
 import torch.utils.data
@@ -96,7 +94,6 @@ def run_cv(hparams):
                 valid_y_pred = trainer.predict(
                     model, dataloaders=make_dataloader(val_set, hparams.batch_size)
                 )
-                # print(valid_y_pred)
                 y_val = le.inverse_transform(y_val)
                 valid_y_pred = le.inverse_transform(np.concatenate(valid_y_pred))
                 valid_accuracy = accuracy_score(y_val, valid_y_pred)
@@ -108,30 +105,6 @@ def run_cv(hparams):
                 mlflow.log_metric("final_val_accuracy", valid_accuracy)
                 validation_accuracies.append(valid_accuracy)
                 mlflow.log_figure(cmd.figure_, f"confusion_matrix.png")
-
-                # Predict on Kaggle test data
-                # kaggle_transformed = scaler.transform(X_kaggle)
-                # kaggle_data = TensorDataset(torch.tensor(kaggle_transformed, dtype=torch.float32))
-
-                # y_pred = trainer.predict(
-                #     model,
-                #     dataloaders=make_dataloader(kaggle_data, hparams.batch_size)
-                # )
-
-                # y_pred = np.concatenate(y_pred)
-                # y_pred = le.inverse_transform(y_pred)
-
-                # test_results = pd.DataFrame({"class": y_pred.flatten()}, index=X_kaggle.index)
-                # test_results.index.name = "id"
-
-                # # Save kaggle test results
-                # parent_run_name = parent_run.info.run_id
-                # with tempfile.TemporaryDirectory() as tmpdir:
-                #     kaggle_submission_fname = Path(tmpdir) / f"kaggle_{parent_run_name}_fold_{fold}.csv"
-                #     test_results.to_csv(kaggle_submission_fname)
-                #     mlf_logger.experiment.log_artifact(
-                #         local_path=kaggle_submission_fname, run_id=mlf_logger.run_id
-                #     )
 
         mean_validation_accuracy = np.mean(validation_accuracies)
         mlflow.log_metric("mean_validation_accuracy", mean_validation_accuracy)
