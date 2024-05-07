@@ -181,6 +181,7 @@ if __name__ == "__main__":
         logger=mlf_logger,
         default_root_dir="checkpoints/",
         callbacks=[EarlyStopping(monitor="val_loss")],
+        num_sanity_val_steps=0,
     )
 
     # Train the model
